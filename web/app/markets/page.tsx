@@ -10,6 +10,7 @@ import MarketGrid from "../components/MarketGrid";
 import Pagination from "../components/Pagination";
 import { useMarketDiscovery } from "../lib/hooks/useMarketDiscovery";
 import RouteErrorBoundary from "../../components/RouteErrorBoundary";
+import { StatusFilter } from '../lib/market-types';
 
 function MarketsContent() {
   const {
@@ -24,24 +25,26 @@ function MarketsContent() {
     setSortBy,
     setPage,
     retry,
-    filteredMarkets
+    filteredMarkets,
+    allMarkets,
   } = useMarketDiscovery();
 
-  // Calculate filter counts for display
-  const filterCounts = useMemo(() => {
-    const counts = {
-      all: filteredMarkets.length,
-      active: 0,
+  const filterCounts = useMemo<Record<StatusFilter, number>>(() => {
+    const counts: Record<StatusFilter, number> = {
+      all: allMarkets.length,
+      open: 0,
       settled: 0,
-      expired: 0
+      voided: 0,
+      cancelled: 0,
+      frozen: 0,
     };
 
-    filteredMarkets.forEach(market => {
-      counts[market.status]++;
+    allMarkets.forEach((market) => {
+      counts[market.status] += 1;
     });
 
     return counts;
-  }, [filteredMarkets]);
+  }, [allMarkets]);
 
   const hasActiveFilters = filters.search.trim() !== '' || filters.status !== 'all';
 
@@ -50,7 +53,6 @@ function MarketsContent() {
       <Navbar />
 
       <div className="pt-32 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Prediction Markets</h1>
           <p className="text-muted-foreground">
@@ -58,27 +60,22 @@ function MarketsContent() {
           </p>
         </div>
 
-        {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <StatsCard title="Total Markets" value={filterCounts.all} />
-          <StatsCard title="Active" value={filterCounts.active} />
+          <StatsCard title="Open" value={filterCounts.open} />
           <StatsCard title="Settled" value={filterCounts.settled} />
         </div>
 
-        {/* Controls */}
         <div className="space-y-6 mb-8 sticky top-16 z-30 py-4 bg-background/80 backdrop-blur-md border-b border-transparent md:border-border/10">
-          {/* Search */}
           <div className="max-w-2xl">
             <SearchBar
               value={filters.search}
               onChange={setSearch}
-              placeholder="Search markets by title or description..."
+              placeholder="Search markets by title..."
             />
           </div>
 
-          {/* Filters and Sort */}
           <div className="flex flex-col lg:flex-row gap-6">
-            {/* Status Filters */}
             <div className="flex-1">
               <FilterControls
                 selectedStatus={filters.status}
@@ -87,7 +84,6 @@ function MarketsContent() {
               />
             </div>
 
-            {/* Sort Controls */}
             <div className="lg:w-64">
               <SortControls
                 selectedSort={filters.sortBy}
@@ -97,7 +93,6 @@ function MarketsContent() {
           </div>
         </div>
 
-        {/* Non-blocking freshness warning */}
         {blockHeightWarning && (
           <div
             className="mb-6 rounded-xl border border-yellow-500/20 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-200"
@@ -108,7 +103,6 @@ function MarketsContent() {
           </div>
         )}
 
-        {/* Markets Grid */}
         <MarketGrid
           markets={paginatedMarkets}
           isLoading={isLoading}
@@ -118,8 +112,7 @@ function MarketsContent() {
           hasFilters={hasActiveFilters}
         />
 
-        {/* Pagination */}
-        {!isLoading && !error && paginatedMarkets.length > 0 && (
+        {!isLoading && !error && filteredMarkets.length > 0 && (
           <Pagination
             pagination={pagination}
             onPageChange={setPage}
