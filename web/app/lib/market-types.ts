@@ -25,17 +25,21 @@ export interface ProcessedMarket {
   totalVolume: number;
   oddsA: number;
   oddsB: number;
-  status: 'active' | 'settled' | 'expired';
+  status: MarketStatus;
   timeRemaining: number | null;
   createdAt: number;
   settledAt: number | null;
   creator: string;
 }
 
+export type MarketStatus = 'open' | 'settled' | 'voided' | 'cancelled' | 'frozen';
+export type StatusFilter = 'all' | MarketStatus;
+export type SortOption = 'newest' | 'oldest' | 'volume' | 'expiring-soon';
+
 export interface MarketFilters {
   search: string;
-  status: 'all' | 'active' | 'settled' | 'expired';
-  sortBy: 'volume' | 'newest' | 'ending-soon';
+  status: StatusFilter;
+  sortBy: SortOption;
 }
 
 export interface PaginationState {
@@ -44,7 +48,3 @@ export interface PaginationState {
   totalItems: number;
   totalPages: number;
 }
-
-export type MarketStatus = 'active' | 'settled' | 'expired';
-export type SortOption = 'volume' | 'newest' | 'ending-soon';
-export type StatusFilter = 'all' | 'active' | 'settled' | 'expired';
